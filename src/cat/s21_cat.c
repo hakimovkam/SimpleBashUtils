@@ -25,23 +25,30 @@ void numberNonblank();
 //MARK: - main
 
 int main(int argc, char *argv[]) {
-    FILE *f;
     if (argc == 1) {
         fileCopy(stdin, stdout);
     } else if (argc == 2) {
+        FILE *file;
         while (--argc > 0) {
-            if ((f = fopen(*++argv, "r")) == NULL) {
+            if ((file = fopen(*++argv, "r")) == NULL) {
                 printf("cat can not open the file %s\n", *argv);
                 return 1;
             } else {
-                fileCopy(f, stdout);
-                fclose(f);
+                fileCopy(file, stdout);
+                fclose(file);
             }
         }
     } else {
         opt exemplarOpt = {0}; // сразу зануляем все значения в структуре exemplarOpt
         int countOfFlags = parser(argc, argv, &exemplarOpt);
-        printf("%d", countOfFlags);
+        for (int i = countOfFlags + 1; i < argc; i++) {
+            FILE *file;
+            if ((file = fopen(argv[i], "r")) != NULL) {
+                printf("%s\n", argv[i]);
+            } else {
+                printf("no such file in directory");
+            }
+        }
     }
     return 0;
 }
