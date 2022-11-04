@@ -5,7 +5,6 @@
 
 #define shortFlags "+benstvTE"
 //MARK: - struct flags
-    /// это нужно будет закинуть в хэдер
 
 typedef struct options {
     int b;
@@ -15,73 +14,52 @@ typedef struct options {
     int t;
     int v;
 } opt;
+static struct option longOption[] = {
+    {"number-nonblank", 0, NULL, 'b'},
+    {"number", 0, NULL, 'n'},
+    {"squeeze-blank", 0, NULL, 's'},
+    { NULL, 0, NULL, 0}
+};
 
 //MARK: - functions
 
-void fileCopy(FILE *, FILE *);
+void reader(FILE *inputFile, FILE *outputFile);
+void formater(opt *exemplarOpt, FILE *inputFile, FILE *outputFile); 
 int parser(int argc, char *argv[], opt *exemplarOpt);
-void numberNonblank();
 
 //MARK: - main
 
 int main(int argc, char *argv[]) {
+    
+    opt options = {0};
+    FILE *fileName;
+    int countOfFlags = parser(argc, argv, &options), currentFilePosition = optind;
+    
     if (argc == 1) {
-        fileCopy(stdin, stdout);
-    } else if (argc == 2) {
-        FILE *file;
-        while (--argc > 0) {
-            if ((file = fopen(*++argv, "r")) == NULL) {
-                printf("cat can not open the file %s\n", *argv);
-                return 1;
-            } else {
-                fileCopy(file, stdout);
-                fclose(file);
-            }
+        while(1) {
+            reader(stdin, stdout);
         }
-    } else {
-        opt exemplarOpt = {0}; // сразу зануляем все значения в структуре exemplarOpt
-        int countOfFlags = parser(argc, argv, &exemplarOpt);
-        for (int i = countOfFlags + 1; i < argc; i++) {
-            FILE *file;
-            if ((file = fopen(argv[i], "r")) != NULL) {
-                printf("%s\n", argv[i]);
+    } else if (countOfFlags == 0) {
+        while (currentFilePosition != argc) {
+            if ((fileName = fopen(argv[currentFilePosition], "r")) != NULL) {
+                reader(fileName, stdout);
+                fclose(fileName);
+                currentFilePosition += 1;
             } else {
-                printf("no such file in directory");
+                printf("cat: %s: No such file or directory\n", argv[currentFilePosition]);
+                currentFilePosition += 1;
             }
         }
     }
     return 0;
 }
 
-//MARK: - fileCopy
-///     просто копирование текста из файла в окно терминала
-void fileCopy(FILE *ifp, FILE *ofp) {
-int c;
-    while ((c = getc(ifp)) != EOF)
-        putc(c, ofp);
-}
-
 //MARK: - parser
-///         тут происходит считывание флагов и заполнение экземпляра структуры opt
+
 int parser(int argc, char *argv[], opt *exemplarOpt) {
     
-    int longIndex = 0, countOfFlags = 0; //указатель на переменную, в которую будет помещен индекс текущего параметра из массива longOption.
+    int longIndex = 0, countOfFlags = 0;
     char opt;
-    
-    static struct option longOption[] = {
-        {"number-nonblank", 0, NULL, 'b'},
-        {"number", 0, NULL, 'n'},
-        {"squeeze-blank", 0, NULL, 's'},
-        { NULL, 0, NULL, 0}
-    };
-    
-    /* выше создан массив экземпляров структур, которые описаны в библиотеке getopt.h
-         struct option {
-         const char *name;
-         int has_arg;
-         int *flag;
-         int val;
-     }; */
     
     while ((opt = getopt_long(argc, argv, shortFlags, longOption, &longIndex)) != -1) {
         switch(opt) {
@@ -115,11 +93,12 @@ int parser(int argc, char *argv[], opt *exemplarOpt) {
     return countOfFlags;
 }
 
-//MARK: - realization of flags
-///     дальше описываются функции флагов, их лучше вынести в отдельный хедер файл
+//MARK: - reader
 
-void numberNonblank() {
+void reader(FILE *inputFile, FILE *outputFile) {
     
+int ch;
+    while ((ch = getc(inputFile)) != EOF)
+        putc(ch, outputFile);
 }
-
 
