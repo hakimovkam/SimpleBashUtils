@@ -24,7 +24,7 @@ static struct option longOption[] = {
 //MARK: - functions
 
 void reader(FILE *inputFile, FILE *outputFile);
-void formater(opt *exemplarOpt, FILE *inputFile, FILE *outputFile); 
+void formater(opt *exemplarOpt, FILE *inputFile);
 int parser(int argc, char *argv[], opt *exemplarOpt);
 
 //MARK: - main
@@ -39,10 +39,11 @@ int main(int argc, char *argv[]) {
         while(1) {
             reader(stdin, stdout);
         }
-    } else if (countOfFlags == 0) {
+    } else {
         while (currentFilePosition != argc) {
             if ((fileName = fopen(argv[currentFilePosition], "r")) != NULL) {
-                reader(fileName, stdout);
+//                reader(fileName, stdout);
+                formater();
                 fclose(fileName);
                 currentFilePosition += 1;
             } else {
@@ -102,3 +103,17 @@ int ch;
         putc(ch, outputFile);
 }
 
+//MARK: - formater
+    
+void formater(opt *exemplarOpt, FILE *inputFile) {
+    char currentChar, previousChar;
+    while((currentChar = fgetc(inputFile)) != EOF) {
+        
+    }
+}
+// s b n e t
+//MARK: - squeezeBlank
+
+void squeezeBlank() {
+    
+}
