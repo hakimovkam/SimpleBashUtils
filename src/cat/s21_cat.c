@@ -30,6 +30,11 @@ void parser(int argc, char *argv[], opt *exemplarOpt) {
   int longIndex = 0;
   char opt;
 
+  static struct option longOption[] = {{"number-nonblank", 0, NULL, 'b'},
+                                       {"number", 0, NULL, 'n'},
+                                       {"squeeze-blank", 0, NULL, 's'},
+                                       {NULL, 0, NULL, 0}};
+
   while ((opt = getopt_long(argc, argv, shortFlags, longOption, &longIndex)) !=
          -1) {
     switch (opt) {

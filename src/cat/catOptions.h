@@ -16,11 +16,6 @@ typedef struct options {
   int v;
 } opt;
 
-static struct option longOption[] = {{"number-nonblank", 0, NULL, 'b'},
-                                     {"number", 0, NULL, 'n'},
-                                     {"squeeze-blank", 0, NULL, 's'},
-                                     {NULL, 0, NULL, 0}};
-
 void reader(FILE *inputFile, FILE *outputFile);
 void formater(opt exemplarOpt, FILE *inputFile);
 void parser(int argc, char *argv[], opt *exemplarOpt);
