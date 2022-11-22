@@ -1,217 +1,215 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <getopt.h>
 #include <regex.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 
 #define optionsString "e:ivclnhsf:o"
 #define bufferSize 512
 
 typedef struct options {
-  int e;
-  int i;
-  int v;
-  int c;
-  int l;
-  int n;
-  int h;
-  int s;
-  int f;
-  int o;
+    int e;
+    int i;
+    int v;
+    int c;
+    int l;
+    int n;
+    int h;
+    int s;
+    int f;
+    int o;
 } opt;
 
 void writeOptions(int option, opt *exemplarOpt, char **templates);
-void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex,
-            int *templateIndex, int *optindIndex, char **templates);
-void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt,
-                    char *fileName, int flagManyFiles, int templateIndex);
+void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex, int *templateIndex, int *optindIndex, char **templates);
+void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fileName, int flagManyFiles, int templateIndex);
 void writeTemplatesToArray(char option, char *optarg, char **templateName);
-void checkOptions(opt exemplarOpt, int *counterC, int lineCounter,
-                  int flagManyFiles, char *fileName, char *buffer);
-void checkOptionsSL(opt exemplarOpt, int counterC, char *fileName);
 
-// MARK: - main
+//MARK: - main
 int main(int argc, char *argv[]) {
-  opt options = {0};
-  int fileIndex = 0, templateIndex = 0, optindIndex = 0;
-  char *templates = (char *)calloc(0, sizeof(char));
-  parser(argc, argv, &options, &fileIndex, &templateIndex, &optindIndex,
-         &templates);
-  int flagManyFiles = (argc - 1 - templateIndex != 1) ? 1 : 0;
-  FILE *file;
-
-  if (options.f == 0 && options.e == 0) {
-    writeTemplatesToArray('a', argv[templateIndex], &templates);
-  } else {
-    templates[strlen(templates) - 1] = '\0';
-  }
-  while (fileIndex != argc) {
-    if ((file = fopen(argv[fileIndex], "r")) != NULL) {
-      searchTemplate(&templates, file, options, argv[fileIndex], flagManyFiles,
-                     templateIndex);
-      fclose(file);
+    opt options = {0};
+    int fileIndex = 0, templateIndex = 0, optindIndex = 0, flagManyFiles = 0;
+    char *templates = (char *)calloc(0, sizeof(char));
+    parser(argc, argv, &options, &fileIndex, &templateIndex, &optindIndex, &templates);
+    FILE *file;
+    
+    if (options.f == 0 && options.e == 0) {
+        writeTemplatesToArray('a', argv[templateIndex], &templates);
+        flagManyFiles = (argc - optindIndex - 1 == 1) ? 0 : 1;
     } else {
-      if (options.s == 0)
-        fprintf(stderr, "grep: %s: No such file or directory", argv[fileIndex]);
+        templates[strlen(templates) - 1] = '\0';
+        flagManyFiles = (argc - optindIndex == 1) ? 0 : 1;
     }
-    fileIndex += 1;
-    printf("\n");
-  }
-  free(templates);
-  return 0;
+        while (fileIndex != argc) {
+            if((file = fopen(argv[fileIndex], "r")) != NULL) {
+                searchTemplate(&templates, file, options, argv[fileIndex], flagManyFiles, templateIndex);
+                fclose(file);
+            } else {
+                if (options.s == 0) fprintf(stderr, "grep: %s: No such file or directory", argv[fileIndex]);
+            }
+            fileIndex += 1;
+        }
+
+//    int strLenArray =  strlen(templates);
+//    for (int i = 0; i < strLenArray; i++) {
+//        printf("%c", (templates[i]));
+//    }
+    return 0;
 }
 
-// MARK: - parser
-void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex,
-            int *templateIndex, int *optindIndex, char **templates) {
-  int option = 0, longIndex = 0;
-  static struct option longOption[] = {{0, 0, 0, 0}};
-  while ((option = getopt_long(argc, argv, optionsString, longOption,
-                               &longIndex)) != -1) {
-    writeOptions(option, exemplarOpt, templates);
-  }
-
-  *optindIndex = optind;
-  if (exemplarOpt->f || exemplarOpt->e)
-    *fileIndex = optind, *templateIndex = 2;
-  else
-    *fileIndex = optind + 1, *templateIndex = optind;
+//MARK: - parser
+void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex, int *templateIndex, int *optindIndex, char **templates) {
+    int option = 0, longIndex = 0;
+    static struct option longOption[] = {{0, 0, 0, 0}};
+    while ((option = getopt_long(argc, argv, optionsString, longOption, &longIndex)) != -1) {
+        writeOptions(option, exemplarOpt, templates);
+    }
+    
+    *optindIndex = optind;
+    if (exemplarOpt->f || exemplarOpt->e) *fileIndex = optind, *templateIndex = 2;
+    else *fileIndex = optind + 1, *templateIndex = optind;
 }
 
-// MARK: - searchTemplate
-void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt,
-                    char *fileName, int flagManyFiles, int templateIndex) {
-  int t = 0, counterC = 0, lineCounter = 0, cflags = 0;
-  regex_t re;
-  char buffer[bufferSize];
-  if (exemplarOpt.i || (exemplarOpt.f || exemplarOpt.e)) {
-    if ((t = regcomp(&re, (*template), REG_ICASE | REG_EXTENDED)) != 0) {
-      fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
-      return;
-    }
-  } else if (exemplarOpt.i) {
-    if ((t = regcomp(&re, (*template), REG_ICASE)) != 0) {
-      fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
-      return;
-    }
-  } else {
-    if ((t = regcomp(&re, (*template), 0)) != 0) {
-      fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
-      return;
-    }
-  }
-  while (fgets(buffer, bufferSize, inputFile) != NULL) {
-    lineCounter += 1;
-    if (regexec(&re, buffer, 0, NULL, 0) != 0 && exemplarOpt.v == 1) {
-      if (exemplarOpt.c || exemplarOpt.n || exemplarOpt.h || templateIndex) {
-        checkOptions(exemplarOpt, &counterC, lineCounter, flagManyFiles,
-                     fileName, buffer);
+
+//MARK: - searchTemplate
+void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fileName, int flagManyFiles, int templateIndex) {
+    int t = 0, cflags = (exemplarOpt.i) ? REG_ICASE : 0, counterC = 0, lineCounter = 0;
+    regex_t re;
+    char buffer[bufferSize] = "0";
+    
+    if (exemplarOpt.i || (exemplarOpt.f || exemplarOpt.e)) {
+        if ((t = regcomp(&re, (*template), REG_ICASE | REG_EXTENDED)) != 0) {
+          fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
+          return;
+        }
+      } else if (exemplarOpt.i) {
+        if ((t = regcomp(&re, (*template), REG_ICASE)) != 0) {
+          fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
+          return;
+        }
+      } else {
+        if ((t = regcomp(&re, (*template), 0)) != 0) {
+          fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
+          return;
+        }
       }
-    } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && exemplarOpt.v == 0) {
-      if (exemplarOpt.c || exemplarOpt.n || exemplarOpt.h || templateIndex) {
-        checkOptions(exemplarOpt, &counterC, lineCounter, flagManyFiles,
-                     fileName, buffer);
-      }
+    
+    while (fgets(buffer, bufferSize, inputFile) != NULL) {
+        lineCounter += 1;
+        if (regexec(&re, buffer, 0, NULL, 0) != 0 && exemplarOpt.v == 1) {
+            if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
+                if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
+                    if (exemplarOpt.c) {
+                        counterC += 1;
+                        continue;
+                    }
+                }
+                if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
+                if (exemplarOpt.n) printf("%d:", lineCounter);
+                if (exemplarOpt.l != 1) printf("%s", buffer);
+            }
+            } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && exemplarOpt.v == 0) {
+                if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
+                    if (exemplarOpt.c) {
+                        counterC += 1;
+                        continue;
+                    }
+                    if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
+                    if (exemplarOpt.n) printf("%d:", lineCounter);
+                    if (exemplarOpt.l != 1) printf("%s", buffer);
+                }
+            }
+        }
+    regfree(&re);
+    if (flagManyFiles && exemplarOpt.c && exemplarOpt.h == 0) printf("%s:%d\n", fileName, counterC);
+    if ((flagManyFiles == 0 || exemplarOpt.h == 1) && exemplarOpt.c) printf("%d\n", counterC);
+    if (exemplarOpt.l && exemplarOpt.c == 0) {
+        printf("%s\n", fileName);
+    } else if (exemplarOpt.l && exemplarOpt.c) {
+        printf("%s\n", fileName);
     }
-  }
-  regfree(&re);
-  checkOptionsSL(exemplarOpt, counterC, fileName);
 }
 
-void checkOptions(opt exemplarOpt, int *counterC, int lineCounter,
-                  int flagManyFiles, char *fileName, char *buffer) {
-  *counterC += 1;
-  if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
-  if (exemplarOpt.n) printf("%d:", lineCounter);
-  if (exemplarOpt.l != 1) fputs(buffer, stdout);
-}
-
-void checkOptionsSL(opt exemplarOpt, int counterC, char *fileName) {
-  if (exemplarOpt.c) printf("%d", counterC);
-  if (exemplarOpt.l && exemplarOpt.c == 0) {
-    printf("%s", fileName);
-  } else if (exemplarOpt.l && exemplarOpt.c) {
-    printf("\n%s", fileName);
-  }
-}
-
-// MARK: - write options to struct and templates to array
+//MARK: - write options and templates to array
 void writeOptions(int option, opt *exemplarOpt, char **templates) {
-  switch (option) {
-    case 'e':
-      exemplarOpt->e = 1;
-      writeTemplatesToArray('e', optarg, templates);
-      break;
-    case 'i':
-      exemplarOpt->i = 1;
-      break;
-    case 'v':
-      exemplarOpt->v = 1;
-      break;
-    case 'c':
-      exemplarOpt->c = 1;
-      break;
-    case 'l':
-      exemplarOpt->l = 1;
-      break;
-    case 'n':
-      exemplarOpt->n = 1;
-      break;
-    case 'h':
-      exemplarOpt->h = 1;
-      break;
-    case 's':
-      exemplarOpt->s = 1;
-      break;
-    case 'f':
-      exemplarOpt->f = 1;
-      writeTemplatesToArray('f', optarg, templates);
-      break;
-    case 'o':
-      exemplarOpt->o = 1;
-      break;
-    default:
-      fprintf(stderr, "use correct flags\n");
-      exit(1);
-  }
+    switch(option) {
+        case 'e':
+            exemplarOpt->e = 1;
+            writeTemplatesToArray('e', optarg, templates);
+            break;
+        case 'i':
+            exemplarOpt->i = 1;
+            break;
+        case 'v':
+            exemplarOpt->v = 1;
+            break;
+        case 'c':
+            exemplarOpt->c = 1;
+            break;
+        case 'l':
+            exemplarOpt->l = 1;
+            break;
+        case 'n':
+            exemplarOpt->n = 1;
+            break;
+        case 'h':
+            exemplarOpt->h = 1;
+            break;
+        case 's':
+            exemplarOpt->s = 1;
+            break;
+        case 'f':
+            exemplarOpt->f = 1;
+            writeTemplatesToArray('f', optarg, templates);
+            break;
+        case 'o':
+            exemplarOpt->o = 1;
+            break;
+        default:
+            fprintf(stderr,"use correct flags\n");
+            exit(1);
+    }
 }
+
 
 void writeTemplatesToArray(char option, char *optarg, char **templateName) {
-  if (option == 'f') {
+    if (option == 'f') {
     FILE *file;
     if ((file = fopen(optarg, "r")) != NULL) {
-      char currentChar;
-      int strLenArray = strlen(*templateName);
-      while ((currentChar = fgetc(file)) != EOF) {
+        char currentChar;
+        int strLenArray = strlen(*templateName);
+        while ((currentChar = fgetc(file)) != EOF) {
         (*templateName) =
             (char *)realloc((*templateName), (strLenArray + 1) * sizeof(char));
         (*templateName)[strLenArray] = currentChar;
         strLenArray += 1;
-      }
-      (*templateName) =
-          (char *)realloc((*templateName), (strLenArray + 1) * sizeof(char));
-      (*templateName)[strLenArray] = '|';
-      fclose(file);
+        }
+        (*templateName) =
+            (char *)realloc((*templateName), (strLenArray + 1) * sizeof(char));
+        (*templateName)[strLenArray] = '|';
+        fclose(file);
     } else {
-      printf("не удалось открыть файл \n");
+        printf("не удалось открыть файл \n");
     }
-  } else if (option == 'e') {
+    } else if (option == 'e') {
     int strLenTemplate = strlen(optarg), strLenArray = strlen(*templateName),
         index = 0;
     (*templateName) = (char *)realloc(
         (*templateName), (strLenTemplate + strLenArray + 1) * sizeof(char));
     for (int i = strLenArray; i < strLenArray + strLenTemplate + 1; i++) {
-      (*templateName)[i] = optarg[index];
-      index += 1;
+        (*templateName)[i] = optarg[index];
+        index += 1;
     }
     (*templateName)[strLenArray + strLenTemplate] = '|';
-  } else {
+    } else {
     int strLenTemplate = strlen(optarg), index = 0;
     (*templateName) =
         (char *)realloc((*templateName), strLenTemplate * sizeof(char));
     for (int i = 0; i < strLenTemplate; i++) {
-      (*templateName)[i] = optarg[i];
-      index += 1;
+        (*templateName)[i] = optarg[i];
+        index += 1;
     }
-  }
+    }
 }
+
