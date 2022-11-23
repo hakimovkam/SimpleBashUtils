@@ -37,9 +37,11 @@ int main(int argc, char *argv[]) {
     if (options.f == 0 && options.e == 0) {
         writeTemplatesToArray('a', argv[templateIndex], &templates);
         flagManyFiles = (argc - optindIndex - 1 == 1) ? 0 : 1;
+//        printf("%d\n", flagManyFiles);
     } else {
         templates[strlen(templates) - 1] = '\0';
         flagManyFiles = (argc - optindIndex == 1) ? 0 : 1;
+//        printf("%d\n", flagManyFiles);
     }
         while (fileIndex != argc) {
             if((file = fopen(argv[fileIndex], "r")) != NULL) {
@@ -129,6 +131,9 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
     } else if (exemplarOpt.l && exemplarOpt.c) {
         printf("%s\n", fileName);
     }
+//    if ((exemplarOpt.e || exemplarOpt.v) && exemplarOpt.n) {
+//        printf("\n");
+//    }
 }
 
 //MARK: - write options and templates to array
