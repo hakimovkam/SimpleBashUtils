@@ -104,7 +104,9 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
             if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                 if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                     if (exemplarOpt.c) {
-                        counterC += 1;
+                        if (buffer[0] != '\n') {
+                            counterC += 1;
+                        }
                         continue;
                     }
                 }
@@ -121,7 +123,9 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
             } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && exemplarOpt.v == 0) {
                 if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                     if (exemplarOpt.c) {
-                        counterC += 1;
+                        if (buffer[0] != '\n' != 0) {
+                            counterC += 1;
+                        }
                         continue;
                     }
                     if (exemplarOpt.h == 0 && flagManyFiles && exemplarOpt.l == 0) printf("%s:", fileName);
