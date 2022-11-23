@@ -81,7 +81,7 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
     regex_t re;
     char buffer[bufferSize] = "0";
     
-    if (exemplarOpt.i || (exemplarOpt.f || exemplarOpt.e)) {
+    if (exemplarOpt.i /*|| (exemplarOpt.f*/|| exemplarOpt.e) {
         if ((t = regcomp(&re, (*template), REG_ICASE | REG_EXTENDED)) != 0) {
           fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
           return;
@@ -100,16 +100,14 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
     
     while (fgets(buffer, bufferSize, inputFile) != NULL) {
         lineCounter += 1;
-        if (regexec(&re, buffer, 0, NULL, 0) != 0 && exemplarOpt.v == 1) {
+        if (regexec(&re, buffer, 0, NULL, 0) != 0 && (exemplarOpt.v == 1 || exemplarOpt.f == 1)) {
             if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
-                if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                     if (exemplarOpt.c) {
                         if (buffer[0] != '\n') {
                             counterC += 1;
                         }
                         continue;
                     }
-                }
                 if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
                 if (exemplarOpt.n && exemplarOpt.o == 0) printf("%d:", lineCounter);
                 if (exemplarOpt.l != 1) {
@@ -120,7 +118,7 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
                     break;
                 }
             }
-            } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && exemplarOpt.v == 0) {
+            } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && (exemplarOpt.v != 1 || exemplarOpt.f == 1)) {
                 if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                     if (exemplarOpt.c) {
                         if (buffer[0] != '\n' != 0) {
@@ -236,6 +234,7 @@ void writeTemplatesToArray(char option, char *optarg, char **templateName) {
     }
 }
 
+//MARK: - -o
 void optionsO(char *buffer, char *templates, opt exemplarOpt, int lineCounter) {
   regex_t re;
   regmatch_t pmatch[4024];
