@@ -112,7 +112,7 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
                 if (exemplarOpt.n && exemplarOpt.o == 0) printf("%d:", lineCounter);
                 if (exemplarOpt.l != 1) {
                     if (exemplarOpt.o) {  optionsO(buffer, *template, exemplarOpt, lineCounter); } else { printf("%s", buffer); }
-                    if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n') { printf("\n"); }
+                    if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n' && exemplarOpt.o == 0) { printf("\n"); }
                 } else {
                     printf("%s\n", fileName);
                     break;
@@ -128,7 +128,7 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
                     if (exemplarOpt.n && exemplarOpt.o == 0) printf("%d:", lineCounter);
                     if (exemplarOpt.l != 1) {
                         if (exemplarOpt.o) {  optionsO(buffer, *template, exemplarOpt, lineCounter); } else { printf("%s", buffer); }
-                        if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n') { printf("\n"); }
+                        if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n' && exemplarOpt.o == 0) { printf("\n"); }
                     } else {
                         printf("%s\n", fileName);
                         break;
