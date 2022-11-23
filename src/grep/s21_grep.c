@@ -124,7 +124,7 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
                         counterC += 1;
                         continue;
                     }
-                    if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
+                    if (exemplarOpt.h == 0 && flagManyFiles && exemplarOpt.l == 0) printf("%s:", fileName);
                     if (exemplarOpt.n && exemplarOpt.o == 0) printf("%d:", lineCounter);
                     if (exemplarOpt.l != 1) {
                         if (exemplarOpt.o) {  optionsO(buffer, *template, exemplarOpt, lineCounter); } else { printf("%s", buffer); }
