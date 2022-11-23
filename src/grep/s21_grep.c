@@ -77,7 +77,7 @@ void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex, int *templ
 
 //MARK: - searchTemplate
 void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fileName, int flagManyFiles, int templateIndex) {
-    int t = 0, cflags = (exemplarOpt.i) ? REG_ICASE : 0, counterC = 0, lineCounter = 0;
+    int t = 0, counterC = 0, lineCounter = 0;
     regex_t re;
     char buffer[bufferSize] = "0";
     
@@ -94,30 +94,31 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
       } else {
         if ((t = regcomp(&re, (*template), 0)) != 0) {
           fprintf(stderr, "grep: %s (%s)\n", buffer, (*template));
-            return;
+          return;
         }
       }
     
     while (fgets(buffer, bufferSize, inputFile) != NULL) {
-            lineCounter += 1;
-            if (regexec(&re, buffer, 0, NULL, 0) != 0 && exemplarOpt.v == 1) {
-                    if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
-                        if (exemplarOpt.c) {
-                            counterC += 1;
-                            continue;
-                        }
+        lineCounter += 1;
+        if (regexec(&re, buffer, 0, NULL, 0) != 0 && exemplarOpt.v == 1) {
+            if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
+                if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
+                    if (exemplarOpt.c) {
+                        counterC += 1;
+                        continue;
                     }
-                    if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
-                    if (exemplarOpt.n) printf("%d:", lineCounter);
-                    if (exemplarOpt.l != 1) {
-                        if (exemplarOpt.o) {  optionsO(buffer, *template, exemplarOpt, lineCounter); } else { printf("%s", buffer); }
-                        if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n') { printf("\n"); }
-                    } else {
-                        printf("%s\n", fileName);
-                        break;
-                    }
+                }
+                if (exemplarOpt.h == 0 && flagManyFiles) printf("%s:", fileName);
+                if (exemplarOpt.n) printf("%d:", lineCounter);
+                if (exemplarOpt.l != 1) {
+                    if (exemplarOpt.o) {  optionsO(buffer, *template, exemplarOpt, lineCounter); } else { printf("%s", buffer); }
+                    if (buffer[strlen(buffer)] == '\0' && buffer[strlen(buffer) - 1] != '\n') { printf("\n"); }
+                } else {
+                    printf("%s\n", fileName);
+                    break;
+                }
+            }
             } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && exemplarOpt.v == 0) {
-                printf("123e");
                 if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
                     if (exemplarOpt.c) {
                         counterC += 1;
@@ -136,13 +137,13 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt, char *fil
             }
         }
     regfree(&re);
-    if (flagManyFiles && exemplarOpt.c && !exemplarOpt.h && !exemplarOpt.l) printf("%s:%d\n", fileName, counterC);
-    if ((!flagManyFiles || exemplarOpt.h) && exemplarOpt.c && !exemplarOpt.o && !exemplarOpt.l) printf("%d\n", counterC);
-    if (exemplarOpt.l && !exemplarOpt.c && !exemplarOpt.l) printf("%s\n", fileName);
-    
+    if (flagManyFiles && exemplarOpt.c && exemplarOpt.h == 0) printf("%s:%d\n", fileName, counterC);
+    if ((flagManyFiles == 0 || exemplarOpt.h == 1) && exemplarOpt.c && exemplarOpt.o == 0) printf("%d\n", counterC);
+    if (exemplarOpt.l && exemplarOpt.c == 0 && exemplarOpt.l == 0) {
+        printf("%s\n", fileName);
+    }
 //    else if (exemplarOpt.l && exemplarOpt.c) {
-////        printf("1111%s\n", fileName);
-//        // тут нужно добавить еще одну проверку на флаг с вроде бысмотреть по 14 тесту
+//        printf("%s\n", fileName);
 //    }
 //    if ((exemplarOpt.e || exemplarOpt.v) && exemplarOpt.n) {
 //        printf("\n");
