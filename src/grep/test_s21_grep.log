@@ -1,6 +1,2 @@
-12:    char *argv = "--number";
-19:    char flag[][20] = {
-23:    }, out[3] = {98, 110, 115};
-24:    int i = 0;
-29:    return (i == 3 ? '0' : out[i]);
-
+123etest_2_grep.txt:7:    for (i = 0; i < s1; i++)
+123etest_2_grep.txt:9:    for (i = (s1); i < (s1 + s2); i++)
