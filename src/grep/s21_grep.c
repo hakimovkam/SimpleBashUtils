@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
       templates[strlen(templates) - 1] = '\0';
       flagManyFiles = (argc - optindIndex == 1) ? 0 : 1;
     }
-      
+
     while (fileIndex != argc) {
       if ((file = fopen(argv[fileIndex], "r")) != NULL) {
         if (flagBreakLineInFile == 0) {
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
         } else {
           printFile(file);
         }
-          fclose(file);
+        fclose(file);
       } else {
         if (options.s == 0)
           fprintf(stderr, "grep: %s: No such file or directory\n",
@@ -61,7 +61,8 @@ void parser(int argc, char *argv[], opt *exemplarOpt, int *fileIndex,
 
 void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt,
                     char *fileName, int flagManyFiles, int templateIndex) {
-  int t = 0, counterC = 0, counterL = 0, lineCounter = 0, lineCounter2 = 0, flagLC = 0;
+  int t = 0, counterC = 0, counterL = 0, lineCounter = 0, lineCounter2 = 0,
+      flagLC = 0, doBreakLineInLastLineFlag = 0;
   regex_t re = {0};
   char buffer[bufferSize] = "0";
   if (exemplarOpt.i || exemplarOpt.f || exemplarOpt.e) {
@@ -80,32 +81,30 @@ void searchTemplate(char **template, FILE *inputFile, opt exemplarOpt,
       return;
     }
   }
-    
+
   while (fgets(buffer, bufferSize, inputFile) != NULL) {
     lineCounter += 1;
     if (regexec(&re, buffer, 0, NULL, 0) != 0 && (exemplarOpt.v == 1)) {
-        lineCounter2 = lineCounter;
+      lineCounter2 = lineCounter;
       if (optionsWithV(exemplarOpt, &counterL, &counterC, fileName,
                        &lineCounter, buffer, templateIndex, &flagManyFiles,
-                       template))
-          
+                       template, &doBreakLineInLastLineFlag))
+
         continue;
     } else if (regexec(&re, buffer, 0, NULL, 0) == 0 && (exemplarOpt.v != 1)) {
-        lineCounter2 = lineCounter;
+      lineCounter2 = lineCounter;
       if (optionsWithOutV(exemplarOpt, &counterL, &counterC, fileName,
                           &lineCounter, buffer, templateIndex, &flagManyFiles,
-                          template))
+                          template, &doBreakLineInLastLineFlag))
         continue;
     }
   }
   regfree(&re);
-    if (lineCounter == lineCounter2) {
-//        printf("1123@@\n");
-        doBreakLineInLastLine(exemplarOpt, buffer);
-    }
+  if (lineCounter == lineCounter2) {
+    doBreakLineInLastLine(exemplarOpt, buffer, &doBreakLineInLastLineFlag);
+  }
   checkSomeOptions(exemplarOpt, &flagManyFiles, &flagLC, &counterC, &counterL,
                    fileName);
-    
 }
 
 // MARK: - write options to struct and templates to array
@@ -149,8 +148,6 @@ void writeOptions(int option, opt *exemplarOpt, char **templates,
       exit(1);
   }
 }
-
-
 
 void writeTemplates(char option, char *optarg, char **templateName,
                     int *flagBreakLineInFile) {
@@ -210,17 +207,17 @@ void optionO(char *buffer, char *templates, opt exemplarOpt) {
   int t = 1, ct = 0, i = 0, j = 0, countTemp = 0;
   char *str = buffer;
   countTemp = getCountTemplates(templates);
-    
+
   while (ct < countTemp) {
-      char *temp = (char *)calloc(1, sizeof(char));
-      while (templates[i] != '|' && templates[i] != '\0') {
-        temp = (char *)realloc(temp, (j + 1) * sizeof(char));
-        temp[j] = templates[i];
-        i += 1;
-        j += 1;
-      }
-        temp =  (char *)realloc(temp, (j + 1) * sizeof(char));
-        temp[j] = '\0';
+    char *temp = (char *)calloc(1, sizeof(char));
+    while (templates[i] != '|' && templates[i] != '\0') {
+      temp = (char *)realloc(temp, (j + 1) * sizeof(char));
+      temp[j] = templates[i];
+      i += 1;
+      j += 1;
+    }
+    temp = (char *)realloc(temp, (j + 1) * sizeof(char));
+    temp[j] = '\0';
     getRegcomp(exemplarOpt, &re, temp, &t);
     while (!regexec(&re, str, 1, pmatch, 0)) {
       for (int k = pmatch[0].rm_so; k < pmatch[0].rm_eo; ++k)
@@ -270,7 +267,8 @@ void optionF(char *optarg, char **templateName, int *flagBreakLineInFile) {
 
 int optionsWithV(opt exemplarOpt, int *counterL, int *counterC, char *fileName,
                  int *lineCounter, char *buffer, int templateIndex,
-                 int *flagManyFiles, char **template) {
+                 int *flagManyFiles, char **template,
+                 int *doBreakLineInLastLine) {
   int flagEnd = 0;
   *counterL += 1;
   if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
@@ -291,6 +289,7 @@ int optionsWithV(opt exemplarOpt, int *counterL, int *counterC, char *fileName,
         if (buffer[strlen(buffer)] == '\0' &&
             buffer[strlen(buffer) - 1] != '\n' && exemplarOpt.o == 0) {
           printf("\n");
+          *doBreakLineInLastLine = 1;
         }
       }
     }
@@ -300,7 +299,8 @@ int optionsWithV(opt exemplarOpt, int *counterL, int *counterC, char *fileName,
 
 int optionsWithOutV(opt exemplarOpt, int *counterL, int *counterC,
                     char *fileName, int *lineCounter, char *buffer,
-                    int templateIndex, int *flagManyFiles, char **template) {
+                    int templateIndex, int *flagManyFiles, char **template,
+                    int *doBreakLineInLastLine) {
   int flagEnd = 0;
   *counterL += 1;
   if (exemplarOpt.n || exemplarOpt.h || templateIndex) {
@@ -323,6 +323,7 @@ int optionsWithOutV(opt exemplarOpt, int *counterL, int *counterC,
         if (buffer[strlen(buffer)] == '\0' &&
             buffer[strlen(buffer) - 1] != '\n' && exemplarOpt.o == 0) {
           printf("\n");
+          *doBreakLineInLastLine = 1;
         }
       }
     }
@@ -368,66 +369,28 @@ int getCountTemplates(char *templates) {
   return countTemp;
 }
 
-void doBreakLineInLastLine(opt exemplarOpt, char *buffer) {
-    int i = 0;
-    
-    if (exemplarOpt.v) {
-//        printf("do.v\n");
-        if (!exemplarOpt.c && ! exemplarOpt.l) {
-//            printf("do.v.proverka\n");
-            while (buffer[i] != '\0') {
-                if (buffer[i + 1] == '\0' && buffer[0] != '\n') {
-                    if (buffer[i] != '\n') {
-                    printf("\n");
-                    }
-                }
-                i += 1;
-            }
+void doBreakLineInLastLine(opt exemplarOpt, char *buffer,
+                           int *doBreakLineInLastLineFlag) {
+  int i = 0;
+  if (exemplarOpt.v == 1) {
+    if (exemplarOpt.c == 0 && exemplarOpt.l == 0 &&
+        *doBreakLineInLastLineFlag == 0) {
+      while (buffer[i] != '\0') {
+        if (buffer[i + 1] == '\0' && buffer[0] != '\n' && buffer[i] != '\n') {
+          printf("\n");
         }
-    } else {
-        if(!exemplarOpt.c && !exemplarOpt.l && !exemplarOpt.v && !exemplarOpt.o) {
-      
-            while(buffer[i] != '\0') {
-                if (buffer[i + 1] == '\0' && buffer [0] != '\n') {
-                    if (buffer[i] != '\n') {
-                    printf("\n");
-                    }
-                }
-                i += 1;
-            }
-        }
+        i += 1;
+      }
     }
+  } else if (exemplarOpt.v == 0) {
+    if (exemplarOpt.c == 0 && exemplarOpt.l == 0 && exemplarOpt.o == 0 &&
+        *doBreakLineInLastLineFlag == 0) {
+      while (buffer[i] != '\0') {
+        if (buffer[i + 1] == '\0' && buffer[0] != '\n' && buffer[i] != '\n') {
+          printf("\n");
+        }
+        i += 1;
+      }
+    }
+  }
 }
-
-//void nFinder(grepStruct* newGrep, char* buffer) {
-//  if (newGrep->c == 0 && newGrep->l == 0 && newGrep->v == 0 &&
-//      newGrep->o == 0) {
-//    int z = 0;
-//    while (buffer[z] != '\0') {
-//      if (buffer[z + 1] == '\0' && buffer[0] != '\n') {
-//        if (buffer[z] != '\n') {
-//          fprintf(stdout, "\n");
-//        }
-//      }
-//      z++;
-//    }
-//  }
-//}
-
-// v
-// !v { o }
-
-//если есть флаг в  с и л равно нуль (во всех случаях) если нет то во всех кроме о      с в л о равно нуль
-//void nFinderBezV(grepStruct* newGrep, char* buffer) {
-//  if (newGrep->c == 0 && newGrep->l == 0) {
-//    int z = 0;
-//    while (buffer[z] != '\0') {
-//      if (buffer[z + 1] == '\0' && buffer[0] != '\n') {
-//        if (buffer[z] != '\n') {
-//          fprintf(stdout, "\n");
-//        }
-//      }
-//      z++;
-//    }
-//  }
-//}
