@@ -37,16 +37,18 @@ void printFile(FILE *file);
 int getCountTemplates(char *templates);
 int optionsWithV(opt exemplarOpt, int *counterL, int *counterC, char *fileName,
                  int *lineCounter, char *buffer, int templateIndex,
-                 int *flagManyFiles, char **template, int *doBreakLineInLastLineFlag);
+                 int *flagManyFiles, char **template,
+                 int *doBreakLineInLastLineFlag);
 int optionsWithOutV(opt exemplarOpt, int *counterL, int *counterC,
                     char *fileName, int *lineCounter, char *buffer,
-                    int templateIndex, int *flagManyFiles, char **template, int *doBreakLineInLastLineFlag);
+                    int templateIndex, int *flagManyFiles, char **template,
+                    int *doBreakLineInLastLineFlag);
 void checkSomeOptions(opt exemplarOpt, int *flagManyFiles, int *flagLC,
                       int *counterC, int *counterL, char *fileName);
 void getRegcomp(opt exemplarOpt, regex_t *re, char *temp, int *t);
 void optionF(char *optarg, char **templateName, int *flagBreakLineInFile);
 void optionE(char *optarg, char **templateName);
-void doBreakLineInLastLine(opt exemplarOpt, char *buffer, int *doBreakLineInLastLineFlag);
-
+void doBreakLineInLastLine(opt exemplarOpt, char *buffer,
+                           int *doBreakLineInLastLineFlag);
 
 #endif  // SRC_S21_GREP_H

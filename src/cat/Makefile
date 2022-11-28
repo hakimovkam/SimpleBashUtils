@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -c -Wall -Werror -Wextra
 CFLAGS_WC = -Wall -Werror -Wextra
-all: s21_cat
+all: clean s21_cat
 
 s21_cat: s21_cat.o catOptions.o
 	$(CC) $(CFLAGS_WC) s21_cat.o catOptions.o -o s21_cat
@@ -11,6 +11,10 @@ s21_cat.o:
 
 catOptions.o:
 	$(CC) $(CFLAGS) catOptions.c
+
+test:
+	sh test_func_cat.sh
+	sh test_leak_cat.sh
 
 clean:
 	rm -rf *.o *.out s21_cat
